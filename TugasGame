@@ -1,0 +1,228 @@
+//ClassPertama
+public class GameUlar {
+    public static void main(String[] args) {
+        
+        new GameFrame();
+        
+    }
+    
+}
+
+//ClassKedua
+import javax.swing.*;
+public class GameFrame extends JFrame{
+    
+    GameFrame(){
+        this.add(new GamePanel());
+        this.setTitle("Ular");
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setResizable(false);
+        this.pack();
+        this.setVisible(true);
+        this.setLocationRelativeTo(null);
+        
+        
+         
+    }
+}
+
+
+//ClassKetiga
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import javax.swing.*;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.Random;
+
+public class GamePanel extends JPanel implements ActionListener{
+    
+    static final int lebarLayar = 600;
+    static final int tinggiLayar = 600;
+    static final int ukuranUnit = 25;
+    static final int unitGame = (lebarLayar*tinggiLayar)/ukuranUnit;
+    static final int tundaan = 75;
+    final int x[] = new int[unitGame];
+    final int y[] = new int[unitGame];
+    
+    int badan = 6;
+    int makanApel;
+    int apelX;
+    int apelY;
+    char arah = 'R';
+    boolean jalan = false;
+    Timer waktu;
+    Random acak;
+    
+GamePanel(){
+    
+    acak = new Random();
+    this.setPreferredSize(new Dimension(lebarLayar,tinggiLayar));
+    this.setBackground(Color.BLACK);
+    this.setFocusable(true);
+    this.addKeyListener(new tombol());
+    
+}   
+
+public void mulai(ActionListener actionListener){
+    apel();
+    jalan = true;
+    waktu = new Timer(tundaan , actionListener);
+    waktu.start();
+}
+
+public void warnaKomponen(Graphics a){
+    super.paintComponent(a);
+    gambar(a);
+}
+
+public void gambar (Graphics a){
+    if(jalan){
+        a.setColor(Color.WHITE);
+        a.fillOval(apelX, apelY, ukuranUnit, ukuranUnit);
+        
+        for(int i = 0 ; i < badan ; i++){
+            if(i == 0){
+                a.setColor(Color.black);
+                a.fillRect(x[i], y[i], ukuranUnit, ukuranUnit);
+            } else {
+                a.setColor(new Color(acak.nextInt(255),acak.nextInt(255),acak.nextInt(255)));
+                a.fillRect(x[i], y[i], ukuranUnit, ukuranUnit);
+            }
+        }
+        
+        a.setColor(Color.blue);
+        a.setFont(new Font("ink free" , Font.BOLD , 48));
+        FontMetrics metrics = getFontMetrics(a.getFont());
+        a.drawString("Nilai : " + makanApel,(lebarLayar - metrics.stringWidth("Nilai : " + makanApel))/2,a.getFont().getSize());
+    } else {
+        selesai(a);
+    }
+    
+}
+
+public void apel (){
+    apelX = acak.nextInt((int)(lebarLayar/ukuranUnit))*ukuranUnit;
+    apelY = acak.nextInt((int)(lebarLayar/ukuranUnit))*ukuranUnit;
+}
+
+public void gerak(){
+    for ( int i = badan ; i > 0 ; i--){
+        x[i] = x[i-1];
+        y[i] = y[i-1];
+    }
+    switch (arah){
+        case 'W':
+            y[0] = y[0] - ukuranUnit;
+            break;
+        case 'S':
+            y[0] = y[0] + ukuranUnit;
+            break;
+        case 'A':
+            x[0] = x[0] - ukuranUnit;
+            break;
+        case 'D':
+            x[0] = x[0] + ukuranUnit;
+            break;
+    }
+
+    
+}
+
+public void cekApel(){
+    if((x[0] == apelX) && (y[0] == apelY)){
+        badan++;
+        makanApel++;
+        apel();
+    }
+}
+
+public void tabrakan(){
+    
+    //kepala dan badan
+    for(int i = badan ; i > 0 ; i--){
+        if((x[0] == x[i]) && (y[0] == y[i])){
+            jalan = false;
+        }
+    }
+    
+    //cek jika kepala menyentuh tepi kiri
+    if(x[0] < 0){
+        jalan = false;
+    }
+    //jika menyentuh tepi kanan
+    if(x[0] > lebarLayar){
+        jalan = false;
+    }
+    //jika menyentuh tepi atas
+    if(y[0] < 0){
+        jalan = false;
+    }
+    //jika menyentuh tepi bawah
+    if(y[0] > tinggiLayar){
+        jalan = false;
+    }
+    if(!jalan){
+        waktu.stop();
+    }
+}
+
+public void selesai(Graphics a){
+    //score game selesai
+    a.setColor(Color.YELLOW);
+    a.setFont(new Font("ink Free" , Font.BOLD , 48));
+    FontMetrics metrics1 = getFontMetrics(a.getFont());
+    a.drawString("Nilai : " + makanApel , (lebarLayar - metrics1.stringWidth("Nilai : " + makanApel))/2 , a.getFont().getSize());
+    
+    //peringatan game selesai
+    a.setColor(Color.YELLOW);
+    a.setFont(new Font("ink Free" , Font.BOLD , 75));
+    FontMetrics metrics2 = getFontMetrics(a.getFont());
+    a.drawString("Game Selesai", (lebarLayar - metrics2.stringWidth("Game Selesai"))/2 , tinggiLayar/2);
+    
+}
+    
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if(jalan){
+        gerak();
+        cekApel();
+        tabrakan();
+    }
+    repaint();
+    }
+ 
+public class tombol extends KeyAdapter{
+        public void tekanTombol(KeyEvent b){
+            
+            switch(b.getKeyCode()){
+                case KeyEvent.VK_LEFT:
+                    if(arah != 'D'){
+                        arah = 'A';
+                    }
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    if(arah != 'A'){
+                        arah = 'D';
+                    }
+                    break;
+                case KeyEvent.VK_UP:
+                    if(arah != 'S'){
+                        arah = 'W';
+                    }
+                    break;
+                case KeyEvent.VK_DOWN:
+                    if(arah != 'W'){
+                        arah = 'S';
+                    }
+                    break;
+            }
+        }
+    }
+}
